@@ -6,6 +6,7 @@ import Overview from './pages/Overview';
 import PasswordReset from './pages/PasswordReset';
 import Campaigns from './pages/Campaigns';
 import { UsersPage, LogsPage } from './pages/Placeholders';
+import AdminProfile from './pages/AdminProfile';
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -30,6 +31,7 @@ const App = () => {
           <Route path="campaigns" element={<Campaigns />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="logs" element={<LogsPage />} />
+          <Route path="admin-profile" element={<AdminProfile />} />
         </Route>
       </Routes>
     </Router>
