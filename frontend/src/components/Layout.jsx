@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, Outlet } from "react-router-dom";
 import {
   Shield,
@@ -13,13 +13,29 @@ import {
   Search,
   Bell,
 } from "lucide-react";
+const VITE_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import axios from "axios";
 
 const Layout = ({ onLogout }) => {
+  // const [name, setName] = useState("");
+  // const [email, setEmail] = useState("admin@ff.com");
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const location = useLocation();
 
   // Helper to highlight active link
   const isActive = (path) => location.pathname === path;
+
+  // useEffect(() => {
+  //   async function getName() {
+  //     console.log(email);
+  //     const response = await fetch(`${VITE_API_BASE_URL}/admin/name`, {
+  //       method: "POST",
+  //       body: JSON.stringify({ email }),
+  //     });
+  //     console.log(response);
+  //   }
+  //   getName();
+  // }, []);
 
   const SidebarItem = ({ to, label, icon: Icon }) => (
     <Link
@@ -103,6 +119,7 @@ const Layout = ({ onLogout }) => {
               {location.pathname === "/"
                 ? "Overview"
                 : location.pathname.replace("/", "").replace("-", " ")}
+              <p>{name}</p>
             </h1>
           </div>
           <div className="flex items-center gap-4">
