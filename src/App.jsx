@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import Dashboard from "./pages/Dashboard";
 import Analytics from "./pages/Analytics";
+import Tickets from "./pages/Tickets";
+import Users from "./pages/Users"; // Added import for Users
 import "./index.css"; // Ensure global styles are applied
 
 function App() {
@@ -12,6 +14,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/tickets" element={<Tickets />} />
+          <Route path="/users" element={<Users />} /> {/* Added route for Users */}
           {/* Add more routes/placeholders as needed */}
           <Route path="*" element={<Dashboard />} />
         </Routes>

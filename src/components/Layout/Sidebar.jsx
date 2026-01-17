@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, BarChart2, Users, Settings, LogOut, ChevronLeft, ChevronRight, Menu } from "lucide-react";
+import { LayoutDashboard, BarChart2, Users, Settings, LogOut, ChevronLeft, ChevronRight, Menu, Ticket } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
@@ -10,6 +10,7 @@ const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
     const menuItems = [
         { icon: LayoutDashboard, label: "Dashboard", path: "/" },
         { icon: BarChart2, label: "Analytics", path: "/analytics" },
+        { icon: Ticket, label: "Tickets", path: "/tickets" },
         { icon: Users, label: "Users", path: "/users" }, // Placeholder for now
         { icon: Settings, label: "Settings", path: "/settings" }, // Placeholder
     ];
