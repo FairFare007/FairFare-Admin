@@ -34,7 +34,7 @@ export const getAllUsers = async (req, res) => {
     }
 };
 
-// Update user password (Admin only)
+// Update user password (Admin only)  
 export const updateUserPassword = async (req, res) => {
     try {
         const { id } = req.params;
