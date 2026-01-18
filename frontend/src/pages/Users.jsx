@@ -84,7 +84,7 @@ const Users = () => {
                         <thead>
                             <tr className="bg-slate-900/50 border-b border-white/5 text-slate-400 text-sm">
                                 <th className="p-4 font-medium">User</th>
-                                <th className="p-4 font-medium hidden md:table-cell">Email</th>
+                                <th className="p-4 font-medium hidden md:table-cell">Email / Status</th>
                                 <th className="p-4 font-medium hidden sm:table-cell">Joined</th>
                                 <th className="p-4 font-medium text-right">Actions</th>
                             </tr>
@@ -116,14 +116,39 @@ const Users = () => {
                                                 </div>
                                                 <div>
                                                     <p className="font-semibold text-slate-200">{user.username}</p>
-                                                    <p className="text-xs text-slate-500 md:hidden">{user.email}</p>
+                                                    <p className="text-xs text-slate-500 md:hidden">
+                                                        {user.email?.toLowerCase().endsWith("@fairfare.com") ? (
+                                                            user.email
+                                                        ) : (
+                                                            <>
+                                                                <span className="text-[10px] text-indigo-400 mr-1">
+                                                                    {user.lastActive ? "Active" : "Updated"}:
+                                                                </span>
+                                                                {new Date(user.lastActive || user.updatedAt).toLocaleString()}
+                                                            </>
+                                                        )}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="p-4 hidden md:table-cell text-slate-400">
                                             <div className="flex items-center gap-2">
-                                                <Mail size={14} />
-                                                {user.email}
+                                                {user.email?.toLowerCase().endsWith("@fairfare.com") ? (
+                                                    <>
+                                                        <Mail size={14} />
+                                                        {user.email}
+                                                    </>
+                                                ) : (
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] uppercase tracking-wider text-indigo-400 font-semibold mb-0.5">
+                                                            Last {user.lastActive ? "Active" : "Updated"}
+                                                        </span>
+                                                        <div className="flex items-center gap-2 text-slate-300">
+                                                            <Calendar size={14} />
+                                                            {new Date(user.lastActive || user.updatedAt).toLocaleString()}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="p-4 hidden sm:table-cell text-slate-400 text-sm">

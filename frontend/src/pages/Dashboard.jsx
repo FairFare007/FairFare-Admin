@@ -41,7 +41,7 @@ const Dashboard = () => {
             color: "blue",
         },
         {
-            title: "Active Groups",
+            title: "Total Groups",
             value: stats.totalGroups || 0,
             icon: Layers,
             trend: "flat",
