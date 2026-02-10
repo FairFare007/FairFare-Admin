@@ -23,29 +23,60 @@ export const getDashboardStats = async (req, res) => {
             { $group: { _id: null, totalUsage: { $sum: "$aiChatUsage.count" } } }
         ]);
 
+        // Count recent signups (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const recentSignupsPromise = User.countDocuments({
+            createdAt: { $gte: thirtyDaysAgo }
+        });
+
+        // Count bot users (users with no friends, no groups, and no expenses)
+        const botUsersPromise = User.countDocuments({
+            $and: [
+                { $or: [{ friends: { $exists: false } }, { friends: { $size: 0 } }] },
+                { $or: [{ groups: { $exists: false } }, { groups: { $size: 0 } }] },
+                { $or: [{ recentExpense: { $exists: false } }, { recentExpense: { $size: 0 } }] }
+            ]
+        });
+
+        // Count monthly active users for retention rate
+        const mauPromise = User.countDocuments({
+            lastActive: { $gte: thirtyDaysAgo, $ne: null, $exists: true }
+        });
+
         const [
             totalUsers,
             totalGroups,
             totalExpenses,
             totalVolumeResult,
-            totalAiUsageResult
+            totalAiUsageResult,
+            recentSignups,
+            botUsers,
+            mau
         ] = await Promise.all([
             totalUsersPromise,
             totalGroupsPromise,
             totalExpensesPromise,
             totalVolumePromise,
-            totalAiUsagePromise
+            totalAiUsagePromise,
+            recentSignupsPromise,
+            botUsersPromise,
+            mauPromise
         ]);
 
         const totalVolume = totalVolumeResult.length > 0 ? totalVolumeResult[0].totalAmount : 0;
         const totalAiUsage = totalAiUsageResult.length > 0 ? totalAiUsageResult[0].totalUsage : 0;
+        const retentionRate = totalUsers > 0 ? Math.round((mau / totalUsers) * 100) : 0;
 
         res.status(200).json({
             totalUsers,
             totalGroups,
             totalExpenses,
             totalVolume,
-            totalAiUsage
+            totalAiUsage,
+            recentSignups,
+            botUsers,
+            retentionRate
         });
     } catch (error) {
         handleError(res, error, "Failed to fetch dashboard stats");
@@ -183,5 +214,39 @@ export const getAiUsageStats = async (req, res) => {
         res.status(200).json({ topAiUsers });
     } catch (error) {
         handleError(res, error, "Failed to fetch AI usage stats");
+    }
+};
+
+// 6. Active Users Stats (DAU, WAU, MAU)
+export const getActiveUsersStats = async (req, res) => {
+    try {
+        const now = new Date();
+        
+        // Calculate time boundaries
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        
+        // Run queries in parallel for efficiency
+        // Only count users where lastActive exists and is not null
+        const [dau, wau, mau] = await Promise.all([
+            User.countDocuments({ 
+                lastActive: { $gte: oneDayAgo, $ne: null, $exists: true } 
+            }),
+            User.countDocuments({ 
+                lastActive: { $gte: sevenDaysAgo, $ne: null, $exists: true } 
+            }),
+            User.countDocuments({ 
+                lastActive: { $gte: thirtyDaysAgo, $ne: null, $exists: true } 
+            })
+        ]);
+        
+        res.status(200).json({
+            dailyActiveUsers: dau,
+            weeklyActiveUsers: wau,
+            monthlyActiveUsers: mau
+        });
+    } catch (error) {
+        handleError(res, error, "Failed to fetch active users stats");
     }
 };

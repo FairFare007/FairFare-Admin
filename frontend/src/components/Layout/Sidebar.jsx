@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, BarChart2, Users, Settings, LogOut, ChevronLeft, ChevronRight, Menu, Ticket } from "lucide-react";
+import { LayoutDashboard, BarChart2, Users, Settings, LogOut, ChevronLeft, ChevronRight, Menu, Ticket, RefreshCw, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
@@ -11,8 +11,9 @@ const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
         { icon: LayoutDashboard, label: "Dashboard", path: "/" },
         { icon: BarChart2, label: "Analytics", path: "/analytics" },
         { icon: Ticket, label: "Tickets", path: "/tickets" },
-        { icon: Users, label: "Users", path: "/users" }, // Placeholder for now
-        { icon: Settings, label: "Settings", path: "/settings" }, // Placeholder
+        { icon: Users, label: "Users", path: "/users" },
+        { icon: Send, label: "Notification Campaigns", path: "/campaigns/notifications" },
+        { icon: Settings, label: "Settings", path: "/settings" },
     ];
 
     const sidebarVariants = {
@@ -135,7 +136,25 @@ const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
                 ))}
             </nav>
 
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800">
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                <button 
+                    onClick={() => window.location.reload()} 
+                    className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group"
+                >
+                    <RefreshCw size={22} className="group-hover:rotate-180 transition-transform duration-500" />
+                    <AnimatePresence>
+                        {!isCollapsed && (
+                            <motion.span
+                                initial={{ opacity: 0, width: 0 }}
+                                animate={{ opacity: 1, width: "auto" }}
+                                exit={{ opacity: 0, width: 0 }}
+                                className="whitespace-nowrap overflow-hidden font-medium"
+                            >
+                                Refresh
+                            </motion.span>
+                        )}
+                    </AnimatePresence>
+                </button>
                 <button className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                     <LogOut size={22} />
                     <AnimatePresence>
