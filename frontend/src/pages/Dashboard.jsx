@@ -45,45 +45,53 @@ const Dashboard = () => {
         fetchStats();
     }, []);
 
+    // Helper: compute trend direction and percentage from current vs previous values
+    const calcTrend = (current, previous) => {
+        const curr = current || 0;
+        const prev = previous || 0;
+        if (prev === 0 && curr === 0) return { trend: "flat", trendValue: "0%" };
+        if (prev === 0) return { trend: "up", trendValue: "+100%" };
+        const pct = Math.round(((curr - prev) / prev) * 100);
+        const clamped = Math.max(-999, Math.min(999, pct));
+        if (clamped > 0) return { trend: "up", trendValue: `+${clamped}%` };
+        if (clamped < 0) return { trend: "down", trendValue: `${clamped}%` };
+        return { trend: "flat", trendValue: "0%" };
+    };
+
     const metrics = [
         {
             title: "Total Users",
             value: stats.totalUsers || 0,
             icon: Users,
-            trend: "up",
-            trendValue: "+12%", // Placeholder trend logic
+            ...calcTrend(stats.totalUsers, stats.prevUsers),
             color: "blue",
         },
         {
             title: "Total Groups",
             value: stats.totalGroups || 0,
             icon: Layers,
-            trend: "flat",
-            trendValue: "0%",
+            ...calcTrend(stats.totalGroups, stats.prevGroups),
             color: "violet",
         },
         {
             title: "Expense Volume",
             value: `₹${stats.totalVolume?.toLocaleString("en-IN") || 0}`,
             icon: DollarSign,
-            trend: "up",
-            trendValue: "+24%",
+            ...calcTrend(stats.totalVolume, stats.prevVolume),
             color: "emerald",
         },
         {
             title: "AI Interactions",
             value: stats.totalAiUsage || 0,
             icon: Activity,
-            trend: "up",
-            trendValue: "+5%",
+            ...calcTrend(stats.totalAiUsage, stats.prevAiUsage),
             color: "rose",
         },
         {
             title: "Recent Signups (30d)",
             value: stats.recentSignups || 0,
             icon: UserPlus,
-            trend: "up",
-            trendValue: "+8%",
+            ...calcTrend(stats.recentSignups, stats.prevSignups),
             color: "blue",
         },
         {
@@ -91,7 +99,7 @@ const Dashboard = () => {
             value: stats.botUsers || 0,
             icon: UserX,
             trend: "flat",
-            trendValue: "0%",
+            trendValue: `${stats.botUsers || 0}`,
             color: "rose",
         },
         {

@@ -26,8 +26,27 @@ export const getDashboardStats = async (req, res) => {
         // Count recent signups (last 30 days)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const sixtyDaysAgo = new Date();
+        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
         const recentSignupsPromise = User.countDocuments({
             createdAt: { $gte: thirtyDaysAgo }
+        });
+
+        // Previous period counts (30-60 days ago) for trend comparison
+        const prevUsersPromise = User.countDocuments({ createdAt: { $lt: thirtyDaysAgo } });
+        const prevGroupsPromise = Group.countDocuments({ createdAt: { $lt: thirtyDaysAgo } });
+        const prevExpensesPromise = Expense.countDocuments({ createdAt: { $lt: thirtyDaysAgo } });
+        const prevVolumePromise = Expense.aggregate([
+            { $match: { createdAt: { $lt: thirtyDaysAgo } } },
+            { $group: { _id: null, totalAmount: { $sum: "$amount" } } }
+        ]);
+        const prevAiUsagePromise = User.aggregate([
+            { $match: { createdAt: { $lt: thirtyDaysAgo } } },
+            { $group: { _id: null, totalUsage: { $sum: "$aiChatUsage.count" } } }
+        ]);
+        const prevSignupsPromise = User.countDocuments({
+            createdAt: { $gte: sixtyDaysAgo, $lt: thirtyDaysAgo }
         });
 
         // Count bot users (users with no friends, no groups, and no expenses)
@@ -52,7 +71,13 @@ export const getDashboardStats = async (req, res) => {
             totalAiUsageResult,
             recentSignups,
             botUsers,
-            mau
+            mau,
+            prevUsers,
+            prevGroups,
+            prevExpenses,
+            prevVolumeResult,
+            prevAiUsageResult,
+            prevSignups
         ] = await Promise.all([
             totalUsersPromise,
             totalGroupsPromise,
@@ -61,12 +86,20 @@ export const getDashboardStats = async (req, res) => {
             totalAiUsagePromise,
             recentSignupsPromise,
             botUsersPromise,
-            mauPromise
+            mauPromise,
+            prevUsersPromise,
+            prevGroupsPromise,
+            prevExpensesPromise,
+            prevVolumePromise,
+            prevAiUsagePromise,
+            prevSignupsPromise
         ]);
 
         const totalVolume = totalVolumeResult.length > 0 ? totalVolumeResult[0].totalAmount : 0;
         const totalAiUsage = totalAiUsageResult.length > 0 ? totalAiUsageResult[0].totalUsage : 0;
         const retentionRate = totalUsers > 0 ? Math.round((mau / totalUsers) * 100) : 0;
+        const prevVolume = prevVolumeResult.length > 0 ? prevVolumeResult[0].totalAmount : 0;
+        const prevAiUsage = prevAiUsageResult.length > 0 ? prevAiUsageResult[0].totalUsage : 0;
 
         res.status(200).json({
             totalUsers,
@@ -76,7 +109,13 @@ export const getDashboardStats = async (req, res) => {
             totalAiUsage,
             recentSignups,
             botUsers,
-            retentionRate
+            retentionRate,
+            prevUsers,
+            prevGroups,
+            prevExpenses,
+            prevVolume,
+            prevAiUsage,
+            prevSignups
         });
     } catch (error) {
         handleError(res, error, "Failed to fetch dashboard stats");

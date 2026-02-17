@@ -10,6 +10,7 @@ import {
 import { createTicket, getAllTickets, updateTicket, deleteTicket, getTicketStats, getUsersForAssignment } from "../controllers/ticket.js";
 import { getAllUsers, updateUserPassword } from "../controllers/user.js";
 import { getNotificationStats, getNotificationUsers, sendNotification } from "../controllers/notification.js";
+import { generateAndSendDailyReport } from "../services/dailyEmailReport.js";
 
 const router = express.Router();
 
@@ -36,5 +37,16 @@ router.patch("/users/:id/password", updateUserPassword);
 router.get("/notification-stats", getNotificationStats);
 router.get("/notification-users", getNotificationUsers);
 router.post("/send-notification", sendNotification);
+
+// Daily Report - Manual Trigger (for testing)
+router.post("/trigger-daily-report", async (req, res) => {
+    try {
+        await generateAndSendDailyReport();
+        res.json({ message: "Daily report sent successfully" });
+    } catch (error) {
+        console.error("[TRIGGER] Failed to send daily report:", error.message);
+        res.status(500).json({ error: "Failed to send daily report", details: error.message });
+    }
+});
 
 export default router;

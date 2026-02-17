@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./db/conn.js";
 import metricRoutes from "./routes/route.js";
+import { startCronJobs } from "./cron/scheduler.js";
 // import adminRoutes from "./routes/admin.js"; // Uncomment if admin routes are needed and controller exists
 
 dotenv.config();
@@ -24,4 +25,5 @@ app.get("/", (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    startCronJobs();
 });
