@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { User } from "../models/schema.js";
 
 // Get all users with pagination and search
@@ -36,26 +37,36 @@ export const getAllUsers = async (req, res) => {
 
 // Update user password (Admin only)  
 export const updateUserPassword = async (req, res) => {
+    const session = await mongoose.startSession();
     try {
         const { id } = req.params;
         const { newPassword } = req.body;
 
         if (!newPassword || newPassword.length < 6) {
+            session.endSession();
             return res.status(400).json({ message: "Password must be at least 6 characters" });
         }
 
-        const user = await User.findById(id);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
+        await session.withTransaction(async () => {
+            const user = await User.findById(id).session(session);
+            if (!user) {
+                throw new Error("User not found");
+            }
 
-        // Directly setting password trigger the pre-save hook for hashing in schema.js
-        user.password = newPassword;
-        await user.save();
+            // Directly setting password triggers the pre-save hook for hashing in schema.js
+            user.password = newPassword;
+            await user.save({ session });
+        });
 
         res.status(200).json({ message: "Password updated successfully" });
     } catch (error) {
+        if (error.message === "User not found") {
+            return res.status(404).json({ message: "User not found" });
+        }
         console.error("Error updating password:", error);
         res.status(500).json({ message: "Server error", error: error.message });
+    } finally {
+        session.endSession();
     }
 };
+

@@ -149,11 +149,19 @@ const ticketSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+// Report Log schema (tracks daily report sends)
+const reportLogSchema = new mongoose.Schema({
+    reportDate: { type: String, required: true, unique: true }, // e.g. "2026-02-17"
+    sentAt: { type: Date, default: Date.now },
+    recipientCount: { type: Number, default: 0 }
+});
+
 const Expense = mongoose.model("Expense", expenseSchema);
 const User = mongoose.model("User", userSchema);
 const Group = mongoose.model("Group", groupSchema);
 const FriendRequest = mongoose.model("FriendRequest", friendRequestSchema);
 const LabelCategory = mongoose.model("LabelCategory", LabelCategorySchema);
 const Ticket = mongoose.model("Ticket", ticketSchema);
+const ReportLog = mongoose.model("ReportLog", reportLogSchema);
 
-export { User, Group, Expense, FriendRequest, LabelCategory, Ticket };
+export { User, Group, Expense, FriendRequest, LabelCategory, Ticket, ReportLog };

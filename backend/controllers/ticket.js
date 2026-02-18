@@ -1,29 +1,38 @@
+import mongoose from "mongoose";
 import { Ticket, User } from "../models/schema.js";
 
 // Create a new ticket
 export const createTicket = async (req, res) => {
+    const session = await mongoose.startSession();
     try {
         const { title, description, raisedBy, severity, tags, assignedTo, status } = req.body;
 
         if (!title || !description || !raisedBy) {
+            session.endSession();
             return res.status(400).json({ message: "Missing required fields" });
         }
 
-        const ticket = new Ticket({
-            title,
-            description,
-            raisedBy,
-            severity: severity || "Medium",
-            tags: tags || [],
-            assignedTo: assignedTo || null,
-            status: status || "Open"
+        let ticket;
+        await session.withTransaction(async () => {
+            ticket = new Ticket({
+                title,
+                description,
+                raisedBy,
+                severity: severity || "Medium",
+                tags: tags || [],
+                assignedTo: assignedTo || null,
+                status: status || "Open"
+            });
+
+            await ticket.save({ session });
         });
 
-        await ticket.save();
         res.status(201).json({ message: "Ticket created successfully", ticket });
     } catch (error) {
         console.error("Error creating ticket:", error);
         res.status(500).json({ message: "Server error", error: error.message });
+    } finally {
+        session.endSession();
     }
 };
 
@@ -66,13 +75,17 @@ export const getAllTickets = async (req, res) => {
 
 // Update ticket status/severity/assignment
 export const updateTicket = async (req, res) => {
+    const session = await mongoose.startSession();
     try {
         const { id } = req.params;
         const updates = req.body;
 
-        const ticket = await Ticket.findByIdAndUpdate(id, updates, { new: true })
-            .populate("raisedBy", "username email")
-            .populate("assignedTo", "username email");
+        let ticket;
+        await session.withTransaction(async () => {
+            ticket = await Ticket.findByIdAndUpdate(id, updates, { new: true, session })
+                .populate("raisedBy", "username email")
+                .populate("assignedTo", "username email");
+        });
 
         if (!ticket) {
             return res.status(404).json({ message: "Ticket not found" });
@@ -82,14 +95,21 @@ export const updateTicket = async (req, res) => {
     } catch (error) {
         console.error("Error updating ticket:", error);
         res.status(500).json({ message: "Server error", error: error.message });
+    } finally {
+        session.endSession();
     }
 };
 
 // Delete ticket
 export const deleteTicket = async (req, res) => {
+    const session = await mongoose.startSession();
     try {
         const { id } = req.params;
-        const ticket = await Ticket.findByIdAndDelete(id);
+
+        let ticket;
+        await session.withTransaction(async () => {
+            ticket = await Ticket.findByIdAndDelete(id, { session });
+        });
 
         if (!ticket) {
             return res.status(404).json({ message: "Ticket not found" });
@@ -99,6 +119,8 @@ export const deleteTicket = async (req, res) => {
     } catch (error) {
         console.error("Error deleting ticket:", error);
         res.status(500).json({ message: "Server error", error: error.message });
+    } finally {
+        session.endSession();
     }
 };
 

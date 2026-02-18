@@ -1,4 +1,5 @@
-import { User, Group, Expense, Ticket } from "../models/schema.js";
+import mongoose from "mongoose";
+import { User, Group, Expense, Ticket, ReportLog } from "../models/schema.js";
 import { sendMail } from "../utils/mailClient.js";
 
 /**
@@ -254,8 +255,63 @@ export async function generateAndSendDailyReport() {
             adminEmails.map(email => sendMail({ to: email, subject, html, text }))
         );
 
+        // Log this report as sent (inside a transaction to prevent duplicates)
+        const reportDateKey = getISTDateString(1); // yesterday's date as key
+        const session = await mongoose.startSession();
+        try {
+            await session.withTransaction(async () => {
+                await ReportLog.findOneAndUpdate(
+                    { reportDate: reportDateKey },
+                    { sentAt: new Date(), recipientCount: adminEmails.length },
+                    { upsert: true, session }
+                );
+            });
+        } finally {
+            session.endSession();
+        }
+
         console.log("[DAILY REPORT] Report sent successfully to", adminEmails.join(", "));
     } catch (error) {
         console.error("[DAILY REPORT] Failed to generate/send report:", error.message);
+    }
+}
+
+/**
+ * Get IST date string (YYYY-MM-DD) for a given day offset.
+ */
+function getISTDateString(daysAgo = 0) {
+    const now = new Date();
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istNow = new Date(now.getTime() + istOffset);
+    istNow.setUTCDate(istNow.getUTCDate() - daysAgo);
+    return istNow.toISOString().split("T")[0];
+}
+
+/**
+ * Check if yesterday's report was sent. If not, send it now.
+ * Called on server startup to handle missed reports.
+ */
+export async function checkAndSendMissedReport() {
+    try {
+        const yesterdayKey = getISTDateString(1);
+        const existing = await ReportLog.findOne({ reportDate: yesterdayKey });
+
+        if (existing) {
+            console.log(`[CRON] Yesterday's report (${yesterdayKey}) was already sent. No action needed.`);
+            return;
+        }
+
+        // Check if it's past 8 AM IST — only send missed report after the scheduled time
+        const now = new Date();
+        const istHour = new Date(now.getTime() + 5.5 * 60 * 60 * 1000).getUTCHours();
+        if (istHour < 8) {
+            console.log("[CRON] It's before 8 AM IST. Will wait for scheduled time.");
+            return;
+        }
+
+        console.log(`[CRON] Missed report detected for ${yesterdayKey}. Sending now...`);
+        await generateAndSendDailyReport();
+    } catch (error) {
+        console.error("[CRON] Error checking for missed report:", error.message);
     }
 }
