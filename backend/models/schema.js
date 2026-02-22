@@ -153,7 +153,8 @@ const ticketSchema = new mongoose.Schema(
 const reportLogSchema = new mongoose.Schema({
     reportDate: { type: String, required: true, unique: true }, // e.g. "2026-02-17"
     sentAt: { type: Date, default: Date.now },
-    recipientCount: { type: Number, default: 0 }
+    recipientCount: { type: Number, default: 0 },
+    recipients: { type: [String], default: [] } // emails the report was sent to
 });
 
 const Expense = mongoose.model("Expense", expenseSchema);

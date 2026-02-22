@@ -262,7 +262,7 @@ export async function generateAndSendDailyReport() {
             await session.withTransaction(async () => {
                 await ReportLog.findOneAndUpdate(
                     { reportDate: reportDateKey },
-                    { sentAt: new Date(), recipientCount: adminEmails.length },
+                    { sentAt: new Date(), recipientCount: adminEmails.length, recipients: adminEmails },
                     { upsert: true, session }
                 );
             });
