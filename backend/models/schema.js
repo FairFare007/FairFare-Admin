@@ -157,6 +157,66 @@ const reportLogSchema = new mongoose.Schema({
     recipients: { type: [String], default: [] } // emails the report was sent to
 });
 
+// Admin User schema (for admin dashboard login - separate from app User)
+const adminUserSchema = new mongoose.Schema(
+    {
+        email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+        password: { type: String, required: true, select: false },
+        name: { type: String, required: true, trim: true },
+        role: { type: String, enum: ["superadmin", "admin"], default: "admin" },
+        status: { type: String, enum: ["active", "suspended"], default: "active" },
+        mustChangePassword: { type: Boolean, default: false },
+    },
+    { timestamps: true }
+);
+
+// Password hashing for AdminUser
+adminUserSchema.pre("save", async function (next) {
+    if (!this.isModified("password")) return next();
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
+adminUserSchema.methods.comparePassword = async function (candidatePassword) {
+    return await bcrypt.compare(candidatePassword, this.password);
+};
+
+// Access Request schema (pending requests from new users wanting admin access)
+const accessRequestSchema = new mongoose.Schema(
+    {
+        requestId: { type: String, unique: true, sparse: true }, // Short unique ID for tracking
+        email: { type: String, required: true, lowercase: true, trim: true },
+        name: { type: String, required: true, trim: true },
+        reason: { type: String, required: true },
+        status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+        reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "AdminUser", default: null },
+        tempPassword: { type: String, default: null }, // set when approved, hashed on the new AdminUser
+    },
+    { timestamps: true }
+);
+
+// Admin Activity Log schema (audit trail for all admin actions)
+const adminActivityLogSchema = new mongoose.Schema(
+    {
+        admin: { type: mongoose.Schema.Types.ObjectId, ref: "AdminUser", required: true },
+        adminEmail: { type: String, required: true }, // denormalized for quick display
+        action: { type: String, required: true }, // e.g. "LOGIN", "APPROVE_REQUEST", "REJECT_REQUEST", "SEND_NOTIFICATION"
+        category: { type: String, enum: ["auth", "users", "tickets", "notifications", "system", "reports"], default: "system" },
+        details: { type: String, default: "" }, // human-readable description
+        metadata: { type: mongoose.Schema.Types.Mixed, default: {} }, // any extra structured data
+        ip: { type: String, default: null },
+    },
+    { timestamps: true }
+);
+
+adminActivityLogSchema.index({ createdAt: -1 });
+adminActivityLogSchema.index({ admin: 1, createdAt: -1 });
+
 const Expense = mongoose.model("Expense", expenseSchema);
 const User = mongoose.model("User", userSchema);
 const Group = mongoose.model("Group", groupSchema);
@@ -164,5 +224,8 @@ const FriendRequest = mongoose.model("FriendRequest", friendRequestSchema);
 const LabelCategory = mongoose.model("LabelCategory", LabelCategorySchema);
 const Ticket = mongoose.model("Ticket", ticketSchema);
 const ReportLog = mongoose.model("ReportLog", reportLogSchema);
+const AdminUser = mongoose.model("AdminUser", adminUserSchema);
+const AccessRequest = mongoose.model("AccessRequest", accessRequestSchema);
+const AdminActivityLog = mongoose.model("AdminActivityLog", adminActivityLogSchema);
 
-export { User, Group, Expense, FriendRequest, LabelCategory, Ticket, ReportLog };
+export { User, Group, Expense, FriendRequest, LabelCategory, Ticket, ReportLog, AdminUser, AccessRequest, AdminActivityLog };

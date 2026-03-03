@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Layout from "../components/Layout/Layout";
 import api from "../services/api";
-import { Search, Lock, User as UserIcon, Mail, Calendar, Shield } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Search, User as UserIcon, Mail, Calendar, Shield } from "lucide-react";
 import ChangePasswordModal from "../components/Users/ChangePasswordModal";
 
 const Users = () => {
@@ -107,26 +106,29 @@ const Users = () => {
                                     <tr key={user._id} className="hover:bg-white/5 transition-colors group">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20 overflow-hidden">
+                                                <a 
+                                                    href={`http://localhost:5173/public-profile/${user._id}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 border border-indigo-500/20 overflow-hidden hover:border-indigo-500 transition-colors"
+                                                >
                                                     {user.profilePhotoUrl ? (
                                                         <img src={user.profilePhotoUrl} alt={user.username} className="w-full h-full object-cover" />
                                                     ) : (
                                                         <UserIcon size={20} />
                                                     )}
-                                                </div>
+                                                </a>
                                                 <div>
-                                                    <p className="font-semibold text-slate-200">{user.username}</p>
-                                                    <p className="text-xs text-slate-500 md:hidden">
-                                                        {user.email?.toLowerCase().endsWith("@fairfare.com") ? (
-                                                            user.email
-                                                        ) : (
-                                                            <>
-                                                                <span className="text-[10px] text-indigo-400 mr-1">
-                                                                    {user.lastActive ? "Active" : "Updated"}:
-                                                                </span>
-                                                                {new Date(user.lastActive || user.updatedAt).toLocaleString()}
-                                                            </>
-                                                        )}
+                                                    <a 
+                                                        href={`http://localhost:5173/public-profile/${user._id}`} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="font-semibold text-slate-200 hover:text-indigo-400 transition-colors block"
+                                                    >
+                                                        {user.username}
+                                                    </a>
+                                                    <p className="text-xs text-slate-500 mt-0.5">
+                                                        {user.email}
                                                     </p>
                                                 </div>
                                             </div>

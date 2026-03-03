@@ -43,7 +43,6 @@ export const updateUserPassword = async (req, res) => {
         const { newPassword } = req.body;
 
         if (!newPassword || newPassword.length < 6) {
-            session.endSession();
             return res.status(400).json({ message: "Password must be at least 6 characters" });
         }
 

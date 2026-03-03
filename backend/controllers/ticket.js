@@ -8,7 +8,6 @@ export const createTicket = async (req, res) => {
         const { title, description, raisedBy, severity, tags, assignedTo, status } = req.body;
 
         if (!title || !description || !raisedBy) {
-            session.endSession();
             return res.status(400).json({ message: "Missing required fields" });
         }
 
