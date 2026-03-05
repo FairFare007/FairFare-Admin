@@ -8,7 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Analytics from "./pages/Analytics";
 import Tickets from "./pages/Tickets";
 import Users from "./pages/Users";
-import NotificationCampaigns from "./pages/NotificationCampaigns";
+import Campaigns from "./pages/Campaigns";
 import AuthScreen from "./pages/AuthScreen";
 import AccessRequests from "./pages/AccessRequests";
 import ActivityLogs from "./pages/ActivityLogs";
@@ -30,7 +30,7 @@ function App() {
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/tickets" element={<ProtectedRoute><Tickets /></ProtectedRoute>} />
               <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
-              <Route path="/campaigns/notifications" element={<ProtectedRoute><NotificationCampaigns /></ProtectedRoute>} />
+              <Route path="/campaigns" element={<ProtectedRoute><Campaigns /></ProtectedRoute>} />
               <Route path="/access-requests" element={<ProtectedRoute><AccessRequests /></ProtectedRoute>} />
               <Route path="/activity-logs" element={<ProtectedRoute><ActivityLogs /></ProtectedRoute>} />
               <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />

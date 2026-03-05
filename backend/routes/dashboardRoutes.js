@@ -10,6 +10,7 @@ import {
 import { createTicket, getAllTickets, updateTicket, deleteTicket, getTicketStats, getUsersForAssignment } from "../controllers/ticket.js";
 import { getAllUsers, updateUserPassword } from "../controllers/user.js";
 import { getNotificationStats, getNotificationUsers, sendNotification } from "../controllers/notification.js";
+import { sendEmailCampaign } from "../controllers/emailCampaignController.js";
 import { generateAndSendDailyReport } from "../services/dailyEmailReport.js";
 
 const router = express.Router();
@@ -37,6 +38,9 @@ router.patch("/users/:id/password", updateUserPassword);
 router.get("/notification-stats", getNotificationStats);
 router.get("/notification-users", getNotificationUsers);
 router.post("/send-notification", sendNotification);
+
+// Email Campaign Routes
+router.post("/send-email-campaign", sendEmailCampaign);
 
 // Daily Report - Manual Trigger (for testing)
 router.post("/trigger-daily-report", async (req, res) => {
