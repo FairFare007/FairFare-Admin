@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import Sidebar from "./Sidebar";
 import { useTheme } from "../../context/ThemeContext";
-import { Sun, Moon, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Layout = ({ children }) => {
-    const { theme, toggleTheme } = useTheme();
+    const { theme } = useTheme();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Basic isMobile check (in real app prefer resize observer or useMedia hook)
@@ -47,7 +47,7 @@ const Layout = ({ children }) => {
                         </h1>
                     </div>
 
-                    
+
                 </header>
 
                 <main className="flex-1 p-4 md:p-6 overflow-y-auto overflow-x-hidden relative">

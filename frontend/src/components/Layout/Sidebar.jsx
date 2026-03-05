@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, BarChart2, Users, Settings, LogOut, ChevronLeft, ChevronRight, Menu, Ticket, RefreshCw, Send, AlertTriangle, ShieldCheck, ScrollText } from "lucide-react";
+import { LayoutDashboard, BarChart2, Users, Settings, LogOut, ChevronLeft, ChevronRight, Menu, Ticket, RefreshCw, Megaphone, AlertTriangle, ShieldCheck, ScrollText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../context/AuthContext";
 
@@ -16,7 +16,7 @@ const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
         { icon: BarChart2, label: "Analytics", path: "/analytics" },
         { icon: Ticket, label: "Tickets", path: "/tickets" },
         { icon: Users, label: "Users", path: "/users" },
-        { icon: Send, label: "Notification Campaigns", path: "/campaigns/notifications" },
+        { icon: Megaphone, label: "Campaigns", path: "/campaigns" },
         { icon: Settings, label: "Settings", path: "/settings" },
     ];
 
@@ -315,8 +315,8 @@ const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
                 </nav>
 
                 <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
-                    <button 
-                        onClick={() => window.location.reload()} 
+                    <button
+                        onClick={() => window.location.reload()}
                         className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group"
                     >
                         <RefreshCw size={22} className="group-hover:rotate-180 transition-transform duration-500" />
