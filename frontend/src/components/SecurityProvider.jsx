@@ -9,7 +9,6 @@ import { useEffect } from "react";
 const SecurityProvider = ({ children }) => {
     useEffect(() => {
         // Only apply security measures in production environment
-        console.log(import.meta.env.PROD);
         if (!import.meta.env.PROD) {
             console.log("[SECURITY] Development mode detected: DevTools protection disabled.");
             return;
