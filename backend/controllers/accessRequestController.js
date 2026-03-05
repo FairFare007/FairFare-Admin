@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { AdminUser, AccessRequest, User } from "../models/schema.js";
 import { logActivity } from "../utils/activityLogger.js";
 import { sendMail } from "../utils/mailClient.js";
-import { buildApprovalEmail, buildRejectionEmail } from "../utils/accessRequestEmails.js";
+import { buildApprovalEmail, buildRejectionEmail, buildSubmissionEmail } from "../utils/accessRequestEmails.js";
 
 /**
  * POST /auth/access-requests
@@ -52,6 +52,16 @@ export const submitAccessRequest = async (req, res) => {
                 ],
                 { session }
             );
+        });
+ 
+        // Send confirmation email asynchronously
+        const emailContent = buildSubmissionEmail({
+            name: name.trim(),
+            email: email.toLowerCase().trim(),
+            requestId,
+        });
+        sendMail({ to: email.toLowerCase().trim(), ...emailContent }).catch((err) => {
+            console.error("[ACCESS REQUEST] Failed to send submission confirmation email:", err.message);
         });
 
         res.status(201).json({ 

@@ -252,3 +252,136 @@ export function buildRejectionEmail({ name, email }) {
 
     return { html, text, subject: `FairFare Admin — Access Request Update` };
 }
+
+/**
+ * Build a confirmation email for newly submitted access requests.
+ */
+export function buildSubmissionEmail({ name, email, requestId }) {
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>FairFare Admin — Request Received</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #0f172a; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #0f172a;">
+            <tr>
+                <td align="center" style="padding: 32px 16px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 520px;">
+
+                        <!-- Header -->
+                        <tr>
+                            <td style="padding: 8px 16px 24px;">
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 16px; overflow: hidden;">
+                                    <tr>
+                                        <td style="padding: 32px 24px; text-align: center;">
+                                            <div style="font-size: 42px; margin-bottom: 8px;">📩</div>
+                                            <div style="font-size: 26px; font-weight: 800; color: #ffffff; font-family: 'Segoe UI', Arial, sans-serif;">
+                                                Request Received
+                                            </div>
+                                            <div style="font-size: 15px; color: rgba(255,255,255,0.9); margin-top: 8px; font-family: 'Segoe UI', Arial, sans-serif;">
+                                                We've got your application, ${name}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- Message -->
+                        <tr>
+                            <td style="padding: 0 16px 16px;">
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #1e293b; border-radius: 12px; overflow: hidden;">
+                                    <tr>
+                                        <td style="padding: 24px;">
+                                            <div style="font-size: 18px; font-weight: 700; color: #f1f5f9; font-family: 'Segoe UI', Arial, sans-serif; margin-bottom: 12px;">
+                                                Thank you for applying! 🚀
+                                            </div>
+                                            <div style="font-size: 14px; color: #94a3b8; font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.7;">
+                                                Your request for access to the FairFare Admin dashboard has been successfully submitted. Our team will review your application shortly.
+                                            </div>
+                                            <div style="font-size: 14px; color: #94a3b8; font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.7; margin-top: 12px;">
+                                                In the meantime, please hang tight! You'll receive another email once your request has been approved or if we need more information.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- Request ID Card -->
+                        <tr>
+                            <td style="padding: 0 16px 16px;">
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid rgba(59, 130, 246, 0.2);">
+                                    <tr>
+                                        <td style="padding: 24px;">
+                                            <div style="font-size: 14px; font-weight: 700; color: #60a5fa; font-family: 'Segoe UI', Arial, sans-serif; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px;">
+                                                🆔 Your Request Details
+                                            </div>
+                                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                                                <tr>
+                                                    <td style="padding: 8px 0;">
+                                                        <span style="font-size: 13px; color: #64748b; font-family: 'Segoe UI', Arial, sans-serif;">Email Used</span>
+                                                        <div style="font-size: 15px; color: #f1f5f9; font-family: 'Segoe UI', Arial, sans-serif; font-weight: 600; margin-top: 4px;">
+                                                            ${email}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="padding: 8px 0;">
+                                                        <span style="font-size: 13px; color: #64748b; font-family: 'Segoe UI', Arial, sans-serif;">Security Code (Request ID)</span>
+                                                        <div style="font-size: 15px; color: #3b82f6; font-family: 'Courier New', monospace; font-weight: 700; margin-top: 4px; background: rgba(59, 130, 246, 0.1); display: inline-block; padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                                                            ${requestId}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- Tracking Note -->
+                        <tr>
+                            <td style="padding: 0 16px 16px;">
+                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background: rgba(148, 163, 184, 0.08); border-radius: 12px; overflow: hidden; border: 1px solid rgba(148, 163, 184, 0.15);">
+                                    <tr>
+                                        <td style="padding: 20px 24px;">
+                                            <div style="font-size: 14px; font-weight: 700; color: #94a3b8; font-family: 'Segoe UI', Arial, sans-serif; margin-bottom: 8px;">
+                                                💡 How to check status
+                                            </div>
+                                            <div style="font-size: 13px; color: #64748b; font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6;">
+                                                You can check the current status of your request at any time on the login page using your email and the Security Code provided above.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- Footer -->
+                        <tr>
+                            <td style="padding: 16px 16px 8px; text-align: center;">
+                                <div style="font-size: 12px; color: #475569; font-family: 'Segoe UI', Arial, sans-serif;">
+                                    Thanks for being patient! We'll be in touch soon.
+                                </div>
+                                <div style="font-size: 12px; color: #334155; font-family: 'Segoe UI', Arial, sans-serif; margin-top: 4px;">
+                                    FairFare Admin Team 💙
+                                </div>
+                            </td>
+                        </tr>
+
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>`;
+
+    const text = `Hi ${name},\n\nThank you for applying for FairFare Admin access! 🚀\n\nYour request has been received and is being reviewed by our team. Please wait for a further email regarding your access status.\n\nYour details:\nEmail: ${email}\nSecurity Code: ${requestId}\n\nYou can use this code to check your status on the login page at any time.\n\n— FairFare Admin Team`;
+
+    return { html, text, subject: `FairFare Admin — Access Request Received` };
+}
