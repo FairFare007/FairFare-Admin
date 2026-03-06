@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import api from "../services/api";
 import { Send, Users, Bell, BellOff, AlertCircle, CheckCircle, XCircle, UserCheck, Search, X, Loader2, CheckSquare, Square, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import CampaignResultPopup from "../components/CampaignResultPopup";
 
 const StatCard = ({ icon: Icon, label, value, color, bgColor }) => (
     <motion.div
@@ -42,6 +43,8 @@ const NotificationCampaigns = () => {
         title: "",
         body: "",
     });
+    const [showResultPopup, setShowResultPopup] = useState(false);
+    const [resultData, setResultData] = useState({ successCount: 0, failCount: 0, totalRecipients: 0 });
 
     // User selection state
     const [sendMode, setSendMode] = useState("all"); // "all" | "selected"
@@ -167,10 +170,12 @@ const NotificationCampaigns = () => {
             }
 
             const response = await api.post("/send-notification", payload);
-            setResult({
-                type: "success",
-                message: `Notification sent! ${response.data.successCount} delivered, ${response.data.failCount} failed.`,
+            setResultData({
+                successCount: response.data.successCount || 0,
+                failCount: response.data.failCount || 0,
+                totalRecipients: response.data.totalRecipients || 0,
             });
+            setShowResultPopup(true);
             setNotification({ title: "", body: "" });
         } catch (error) {
             console.error("Failed to send notification:", error);
@@ -634,6 +639,16 @@ const NotificationCampaigns = () => {
                     </>
                 )}
             </AnimatePresence>
+
+            {/* Animated Result Popup */}
+            <CampaignResultPopup
+                show={showResultPopup}
+                onClose={() => setShowResultPopup(false)}
+                successCount={resultData.successCount}
+                failCount={resultData.failCount}
+                totalRecipients={resultData.totalRecipients}
+                type="notification"
+            />
         </div>
     );
 };

@@ -2,12 +2,15 @@ import { useState, useEffect, useMemo } from "react";
 import api from "../services/api";
 import { Mail, Send, AlertCircle, CheckCircle, Loader2, Search, X, Users, UserCheck, CheckSquare, Square, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import CampaignResultPopup from "../components/CampaignResultPopup";
 
 const EmailCampaigns = () => {
     const [sending, setSending] = useState(false);
     const [result, setResult] = useState(null);
     const [email, setEmail] = useState({ title: "", body: "" });
     const [showConfirm, setShowConfirm] = useState(false);
+    const [showResultPopup, setShowResultPopup] = useState(false);
+    const [resultData, setResultData] = useState({ successCount: 0, failCount: 0, totalRecipients: 0 });
 
     // User selection state
     const [sendMode, setSendMode] = useState("all"); // "all" | "selected"
@@ -99,10 +102,12 @@ const EmailCampaigns = () => {
             }
 
             const response = await api.post("/send-email-campaign", payload);
-            setResult({
-                type: "success",
-                message: `Campaign sent! ${response.data.successCount} delivered, ${response.data.failCount} failed.`,
+            setResultData({
+                successCount: response.data.successCount || 0,
+                failCount: response.data.failCount || 0,
+                totalRecipients: response.data.totalRecipients || 0,
             });
+            setShowResultPopup(true);
             setEmail({ title: "", body: "" });
         } catch (error) {
             console.error("Failed to send email campaign:", error);
@@ -437,6 +442,16 @@ const EmailCampaigns = () => {
                     </>
                 )}
             </AnimatePresence>
+
+            {/* Animated Result Popup */}
+            <CampaignResultPopup
+                show={showResultPopup}
+                onClose={() => setShowResultPopup(false)}
+                successCount={resultData.successCount}
+                failCount={resultData.failCount}
+                totalRecipients={resultData.totalRecipients}
+                type="email"
+            />
         </div>
     );
 };
