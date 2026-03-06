@@ -34,7 +34,7 @@ app.get("/", (req, res) => {
 
 // ✅ Self-ping function to prevent Render sleeping
 function keepServerAwake() {
-  // Ping every 5 minutes
+  // Ping every 5 minutes 
   setInterval(async () => {
     try {
       const url = process.env.RENDER_EXTERNAL_URL
