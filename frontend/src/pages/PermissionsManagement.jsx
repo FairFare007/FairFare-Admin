@@ -20,6 +20,9 @@ const PermissionsManagement = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("admins"); // 'admins' or 'requests'
     const [expandingAdmin, setExpandingAdmin] = useState(null);
+    const [pendingChanges, setPendingChanges] = useState({}); // { adminId: newPermissionsArray }
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [confirmingAdminId, setConfirmingAdminId] = useState(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -30,6 +33,7 @@ const PermissionsManagement = () => {
             ]);
             setAdmins(adminsRes.data);
             setRequests(requestsRes.data);
+            setPendingChanges({});
         } catch (error) {
             console.error("Failed to fetch permissions data:", error);
         } finally {
@@ -41,17 +45,42 @@ const PermissionsManagement = () => {
         fetchData();
     }, []);
 
-    const handleTogglePermission = async (adminId, permissionKey, currentPermissions) => {
+    const handleTogglePermission = (adminId, permissionKey, currentPermissions) => {
+        const effectivePermissions = pendingChanges[adminId] || currentPermissions;
         let newPermissions;
-        if (currentPermissions.includes(permissionKey)) {
-            newPermissions = currentPermissions.filter(p => p !== permissionKey);
+        
+        if (effectivePermissions.includes(permissionKey)) {
+            newPermissions = effectivePermissions.filter(p => p !== permissionKey);
         } else {
-            newPermissions = [...currentPermissions, permissionKey];
+            newPermissions = [...effectivePermissions, permissionKey];
         }
 
+        setPendingChanges({
+            ...pendingChanges,
+            [adminId]: newPermissions
+        });
+    };
+
+    const handleResetPending = (adminId) => {
+        const newPending = { ...pendingChanges };
+        delete newPending[adminId];
+        setPendingChanges(newPending);
+    };
+
+    const handleConfirmUpdate = (adminId) => {
+        setConfirmingAdminId(adminId);
+        setShowConfirmModal(true);
+    };
+
+    const executeUpdate = async () => {
+        const adminId = confirmingAdminId;
+        const newPermissions = pendingChanges[adminId];
+        
         try {
             await api.patch(`/auth/permissions/admins/${adminId}`, { permissions: newPermissions });
             setAdmins(admins.map(a => a._id === adminId ? { ...a, permissions: newPermissions } : a));
+            handleResetPending(adminId);
+            setShowConfirmModal(false);
         } catch (error) {
             alert(error.response?.data?.error || "Failed to update permissions.");
         }
@@ -86,9 +115,110 @@ const PermissionsManagement = () => {
         }
     };
 
+    const getPermissionLabel = (key) => ALL_PERMISSIONS.find(p => p.key === key)?.label || key;
+
+    const ConfirmModal = () => {
+        if (!confirmingAdminId) return null;
+        const admin = admins.find(a => a._id === confirmingAdminId);
+        if (!admin) return null;
+
+        const oldPermissions = admin.permissions || [];
+        const newPermissions = pendingChanges[confirmingAdminId] || [];
+        
+        const granted = newPermissions.filter(p => !oldPermissions.includes(p));
+        const revoked = oldPermissions.filter(p => !newPermissions.includes(p));
+
+        return (
+            <AnimatePresence>
+                {showConfirmModal && (
+                    <>
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowConfirmModal(false)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+                        />
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="fixed inset-0 flex items-center justify-center z-[101] p-4"
+                        >
+                            <div className="bg-slate-900 border border-white/10 rounded-3xl p-8 w-full max-w-md shadow-2xl">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                                        <ShieldCheck size={28} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white">Confirm Changes</h3>
+                                        <p className="text-slate-400 text-sm">Reviewing permissions for {admin.name}</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6 mb-8">
+                                    {granted.length > 0 && (
+                                        <div>
+                                            <p className="text-[10px] font-bold text-green-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                                <UserPlus size={12} /> Granting
+                                            </p>
+                                            <div className="space-y-1.5">
+                                                {granted.map(p => (
+                                                    <div key={p} className="bg-green-500/5 border border-green-500/10 rounded-lg p-2 text-sm text-green-200">
+                                                        {getPermissionLabel(p)}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {revoked.length > 0 && (
+                                        <div>
+                                            <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                                <Trash2 size={12} /> Revoking
+                                            </p>
+                                            <div className="space-y-1.5">
+                                                {revoked.map(p => (
+                                                    <div key={p} className="bg-red-500/5 border border-red-500/10 rounded-lg p-2 text-sm text-red-200 line-through opacity-70">
+                                                        {getPermissionLabel(p)}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {granted.length === 0 && revoked.length === 0 && (
+                                        <p className="text-slate-500 text-sm italic text-center py-4">No changes to apply.</p>
+                                    )}
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button 
+                                        onClick={() => setShowConfirmModal(false)}
+                                        className="flex-1 px-4 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        onClick={executeUpdate}
+                                        disabled={granted.length === 0 && revoked.length === 0}
+                                        className="flex-1 px-4 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold transition-all shadow-lg shadow-blue-500/20"
+                                    >
+                                        Confirm
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+        );
+    };
+
     return (
         <Layout>
             <div className="p-6 max-w-6xl mx-auto">
+                <ConfirmModal />
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
@@ -129,115 +259,142 @@ const PermissionsManagement = () => {
                                 exit={{ opacity: 0, x: 20 }}
                                 className="space-y-4"
                             >
-                                {admins.map((admin) => (
-                                    <div 
-                                        key={admin._id}
-                                        className="bg-slate-900/40 border border-white/5 rounded-2xl overflow-hidden hover:border-white/10 transition-all"
-                                    >
-                                        <div className="p-5 flex items-center justify-between gap-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${admin.role === "superadmin" ? "bg-indigo-500/20 text-indigo-400" : "bg-blue-500/10 text-blue-400"}`}>
-                                                    {admin.role === "superadmin" ? <Shield size={24} /> : <UserCheck size={24} />}
-                                                </div>
-                                                <div>
-                                                    <h3 className="text-white font-bold flex items-center gap-2">
-                                                        {admin.name}
-                                                        {admin.role === "superadmin" && (
-                                                            <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full uppercase tracking-tighter">Superadmin</span>
-                                                        )}
-                                                        {admin._id === currentAdmin._id && (
-                                                            <span className="text-[10px] bg-white/10 text-slate-400 px-2 py-0.5 rounded-full uppercase tracking-tighter">You</span>
-                                                        )}
-                                                    </h3>
-                                                    <p className="text-slate-500 text-sm">{admin.email}</p>
-                                                </div>
-                                            </div>
+                                {admins.map((admin) => {
+                                    const hasChanges = !!pendingChanges[admin._id];
+                                    const effectivePermissions = pendingChanges[admin._id] || admin.permissions || [];
 
-                                            <div className="flex items-center gap-2">
-                                                {/* Promotion/Demotion only for Superadmins */}
-                                                {currentAdmin.role === "superadmin" && admin._id !== currentAdmin._id && (
-                                                    admin.role === "admin" ? (
-                                                        <button 
-                                                            onClick={() => handlePromote(admin._id, admin.name)}
-                                                            className="p-2.5 rounded-xl bg-slate-800 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-400 transition-all"
-                                                            title="Promote to Superadmin"
-                                                        >
-                                                            <Shield size={18} />
-                                                        </button>
-                                                    ) : (
-                                                        <button 
-                                                            onClick={() => handleDemote(admin._id, admin.name)}
-                                                            className="p-2.5 rounded-xl bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-all"
-                                                            title="Demote to Admin"
-                                                        >
-                                                            <Trash2 size={18} />
-                                                        </button>
-                                                    )
-                                                )}
-
-                                                <button 
-                                                    onClick={() => setExpandingAdmin(expandingAdmin === admin._id ? null : admin._id)}
-                                                    className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 transition-all"
-                                                >
-                                                    {expandingAdmin === admin._id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <AnimatePresence>
-                                            {expandingAdmin === admin._id && (
-                                                <motion.div 
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: "auto", opacity: 1 }}
-                                                    exit={{ height: 0, opacity: 0 }}
-                                                    className="border-t border-white/5 bg-black/20"
-                                                >
-                                                    <div className="p-6">
-                                                        {admin.role === "superadmin" ? (
-                                                            <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 flex items-center gap-3">
-                                                                <ShieldCheck size={20} className="text-indigo-400" />
-                                                                <p className="text-slate-300 text-sm">
-                                                                    Superadmins have all permissions. Specific permissions cannot be toggled.
-                                                                </p>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Granular Permissions</p>
-                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                                    {ALL_PERMISSIONS.map((perm) => (
-                                                                        <button
-                                                                            key={perm.key}
-                                                                            onClick={() => handleTogglePermission(admin._id, perm.key, admin.permissions || [])}
-                                                                            className={`flex items-start gap-3 p-3 rounded-2xl border transition-all text-left ${
-                                                                                admin.permissions?.includes(perm.key)
-                                                                                    ? "bg-blue-600/10 border-blue-500/30 ring-1 ring-blue-500/20"
-                                                                                    : "bg-slate-800/30 border-white/5 hover:border-white/10"
-                                                                            }`}
-                                                                        >
-                                                                            <div className={`mt-0.5 w-5 h-5 rounded-md flex items-center justify-center border ${
-                                                                                admin.permissions?.includes(perm.key)
-                                                                                    ? "bg-blue-600 border-blue-600 text-white"
-                                                                                    : "bg-slate-800 border-white/10"
-                                                                            }`}>
-                                                                                {admin.permissions?.includes(perm.key) && <CheckCircle2 size={12} />}
-                                                                            </div>
-                                                                            <div>
-                                                                                <p className={`text-sm font-bold ${admin.permissions?.includes(perm.key) ? "text-white" : "text-slate-400"}`}>
-                                                                                    {perm.label}
-                                                                                </p>
-                                                                                <p className="text-[11px] text-slate-500 leading-tight mt-0.5">{perm.description}</p>
-                                                                            </div>
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                            </>
-                                                        )}
+                                    return (
+                                        <div 
+                                            key={admin._id}
+                                            className={`bg-slate-900/40 border rounded-2xl overflow-hidden transition-all ${
+                                                hasChanges ? "border-blue-500/40 shadow-xl shadow-blue-500/5 ring-1 ring-blue-500/20" : "border-white/5 hover:border-white/10"
+                                            }`}
+                                        >
+                                            <div className="p-5 flex items-center justify-between gap-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${admin.role === "superadmin" ? "bg-indigo-500/20 text-indigo-400" : "bg-blue-500/10 text-blue-400"}`}>
+                                                        {admin.role === "superadmin" ? <Shield size={24} /> : <UserCheck size={24} />}
                                                     </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-                                ))}
+                                                    <div>
+                                                        <h3 className="text-white font-bold flex items-center gap-2">
+                                                            {admin.name}
+                                                            {admin.role === "superadmin" && (
+                                                                <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full uppercase tracking-tighter">Superadmin</span>
+                                                            )}
+                                                            {admin._id === currentAdmin._id && (
+                                                                <span className="text-[10px] bg-white/10 text-slate-400 px-2 py-0.5 rounded-full uppercase tracking-tighter">You</span>
+                                                            )}
+                                                            {hasChanges && (
+                                                                <span className="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full uppercase tracking-tighter animate-pulse">Pending Changes</span>
+                                                            )}
+                                                        </h3>
+                                                        <p className="text-slate-500 text-sm">{admin.email}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2">
+                                                    {hasChanges && (
+                                                        <div className="flex items-center gap-2 mr-2">
+                                                            <button 
+                                                                onClick={() => handleResetPending(admin._id)}
+                                                                className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:text-white transition-all"
+                                                            >
+                                                                Reset
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleConfirmUpdate(admin._id)}
+                                                                className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold uppercase tracking-wider transition-all shadow-lg shadow-blue-500/20"
+                                                            >
+                                                                Save Changes
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Promotion/Demotion only for Superadmins */}
+                                                    {currentAdmin.role === "superadmin" && admin._id !== currentAdmin._id && (
+                                                        admin.role === "admin" ? (
+                                                            <button 
+                                                                onClick={() => handlePromote(admin._id, admin.name)}
+                                                                className="p-2.5 rounded-xl bg-slate-800 hover:bg-indigo-500/20 text-slate-400 hover:text-indigo-400 transition-all"
+                                                                title="Promote to Superadmin"
+                                                            >
+                                                                <Shield size={18} />
+                                                            </button>
+                                                        ) : (
+                                                            <button 
+                                                                onClick={() => handleDemote(admin._id, admin.name)}
+                                                                className="p-2.5 rounded-xl bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-all"
+                                                                title="Demote to Admin"
+                                                            >
+                                                                <Trash2 size={18} />
+                                                            </button>
+                                                        )
+                                                    )}
+
+                                                    <button 
+                                                        onClick={() => setExpandingAdmin(expandingAdmin === admin._id ? null : admin._id)}
+                                                        className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 transition-all"
+                                                    >
+                                                        {expandingAdmin === admin._id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <AnimatePresence>
+                                                {expandingAdmin === admin._id && (
+                                                    <motion.div 
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: "auto", opacity: 1 }}
+                                                        exit={{ height: 0, opacity: 0 }}
+                                                        className="border-t border-white/5 bg-black/20"
+                                                    >
+                                                        <div className="p-6">
+                                                            {admin.role === "superadmin" ? (
+                                                                <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 flex items-center gap-3">
+                                                                    <ShieldCheck size={20} className="text-indigo-400" />
+                                                                    <p className="text-slate-300 text-sm">
+                                                                        Superadmins have all permissions. Specific permissions cannot be toggled.
+                                                                    </p>
+                                                                </div>
+                                                            ) : (
+                                                                <>
+                                                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Granular Permissions</p>
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                        {ALL_PERMISSIONS.map((perm) => (
+                                                                            <button
+                                                                                key={perm.key}
+                                                                                onClick={() => handleTogglePermission(admin._id, perm.key, admin.permissions || [])}
+                                                                                className={`flex items-start gap-3 p-3 rounded-2xl border transition-all text-left ${
+                                                                                    effectivePermissions.includes(perm.key)
+                                                                                        ? "bg-blue-600/10 border-blue-500/30 ring-1 ring-blue-500/20"
+                                                                                        : "bg-slate-800/30 border-white/5 hover:border-white/10"
+                                                                                }`}
+                                                                            >
+                                                                                <div className={`mt-0.5 w-5 h-5 rounded-md flex items-center justify-center border ${
+                                                                                    effectivePermissions.includes(perm.key)
+                                                                                        ? "bg-blue-600 border-blue-600 text-white"
+                                                                                        : "bg-slate-800 border-white/10"
+                                                                                }`}>
+                                                                                    {effectivePermissions.includes(perm.key) && <CheckCircle2 size={12} />}
+                                                                                </div>
+                                                                                <div>
+                                                                                    <p className={`text-sm font-bold ${effectivePermissions.includes(perm.key) ? "text-white" : "text-slate-400"}`}>
+                                                                                        {perm.label}
+                                                                                    </p>
+                                                                                    <p className="text-[11px] text-slate-500 leading-tight mt-0.5">{perm.description}</p>
+                                                                                </div>
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    );
+                                })}
                             </motion.div>
                         ) : (
                             <motion.div 
@@ -274,7 +431,7 @@ const PermissionsManagement = () => {
                                                     <div className="flex items-center gap-2">
                                                         <h3 className="text-white font-bold">{req.admin?.name || "Unknown"}</h3>
                                                         <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full uppercase tracking-tighter">
-                                                            {req.permission}
+                                                            {getPermissionLabel(req.permission)}
                                                         </span>
                                                     </div>
                                                     <p className="text-slate-400 text-sm italic mt-1 bg-black/20 p-2 rounded-lg border border-white/5 ring-inset">

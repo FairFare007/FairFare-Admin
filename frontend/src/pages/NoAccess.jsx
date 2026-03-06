@@ -17,6 +17,7 @@ const NoAccess = () => {
         "/tickets": "manage_tickets",
         "/campaigns": "send_campaigns",
         "/access-requests": "manage_access_requests",
+        "/permissions": "manage_permissions",
         "/activity-logs": "view_activity_logs", // although user said logs are for all, implementation might gate it if changed
     };
 
