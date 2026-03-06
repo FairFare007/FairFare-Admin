@@ -20,7 +20,6 @@ const AuthScreen = () => {
 
   // Request form state
   const [reqEmail, setReqEmail] = useState("");
-  const [reqName, setReqName] = useState("");
   const [reqReason, setReqReason] = useState("");
   const [submittedRequestId, setSubmittedRequestId] = useState("");
 
@@ -58,13 +57,11 @@ const AuthScreen = () => {
     try {
       const res = await api.post("/auth/access-requests", {
         email: reqEmail,
-        name: reqName,
         reason: reqReason,
       });
       setSuccess(res.data.message);
       setSubmittedRequestId(res.data.requestId);
       setReqEmail("");
-      setReqName("");
       setReqReason("");
     } catch (err) {
       if (err.response?.data?.code === "NO_USER_ACCOUNT") {
@@ -380,20 +377,6 @@ const AuthScreen = () => {
                 onSubmit={handleRequestAccess}
                 className="space-y-4"
               >
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Full Name</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <input
-                      type="text"
-                      required
-                      value={reqName}
-                      onChange={(e) => setReqName(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-sm"
-                      placeholder="John Doe"
-                    />
-                  </div>
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-1.5">Email</label>
                   <div className="relative">

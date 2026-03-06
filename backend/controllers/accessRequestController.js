@@ -11,9 +11,9 @@ import { buildApprovalEmail, buildRejectionEmail, buildSubmissionEmail } from ".
 export const submitAccessRequest = async (req, res) => {
     const session = await mongoose.startSession();
     try {
-        const { email, name, reason } = req.body;
-        if (!email || !name || !reason) {
-            return res.status(400).json({ error: "Email, name, and reason are required." });
+        const { email, reason } = req.body;
+        if (!email || !reason) {
+            return res.status(400).json({ error: "Email and reason are required." });
         }
 
         let requestId;
