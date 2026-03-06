@@ -1,8 +1,8 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated, isLoading, admin } = useAuth();
+const ProtectedRoute = ({ children, requiredPermission }) => {
+    const { isAuthenticated, isLoading, admin, hasPermission } = useAuth();
     const location = useLocation();
 
     if (isLoading) {
@@ -23,6 +23,11 @@ const ProtectedRoute = ({ children }) => {
     // Force password change for new admins (but don't redirect if already on the change-password page)
     if (admin?.mustChangePassword && location.pathname !== "/change-password") {
         return <Navigate to="/change-password" replace />;
+    }
+
+    // Check granular permissions
+    if (requiredPermission && !hasPermission(requiredPermission)) {
+        return <Navigate to="/no-access" replace />;
     }
 
     return children;

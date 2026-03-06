@@ -7,7 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { logout } = useAuth();
+    const { logout, hasPermission } = useAuth();
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -15,15 +15,20 @@ const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
         { icon: LayoutDashboard, label: "Dashboard", path: "/" },
         { icon: BarChart2, label: "Analytics", path: "/analytics" },
         { icon: Ticket, label: "Tickets", path: "/tickets" },
-        { icon: Users, label: "Users", path: "/users" },
-        { icon: Megaphone, label: "Campaigns", path: "/campaigns" },
+        { icon: Users, label: "Users", path: "/users", permission: "manage_users" },
+        { icon: Megaphone, label: "Campaigns", path: "/campaigns", permission: "send_campaigns" },
+        { icon: ShieldCheck, label: "Request Access", path: "/request-permissions" },
         { icon: Settings, label: "Settings", path: "/settings" },
     ];
 
     const adminItems = [
-        { icon: ShieldCheck, label: "Access Requests", path: "/access-requests" },
+        { icon: ShieldCheck, label: "Permissions", path: "/permissions", permission: "manage_permissions" },
+        { icon: ScrollText, label: "Access Requests", path: "/access-requests", permission: "manage_access_requests" },
         { icon: ScrollText, label: "Activity Logs", path: "/activity-logs" },
     ];
+
+    const filteredMenuItems = menuItems.filter(item => !item.permission || hasPermission(item.permission));
+    const filteredAdminItems = adminItems.filter(item => !item.permission || hasPermission(item.permission));
 
     const sidebarVariants = {
         expanded: { width: "240px" },
@@ -158,7 +163,7 @@ const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
                                     </button>
                                 </div>
                                 <nav className="space-y-2">
-                                    {menuItems.map((item) => (
+                                    {filteredMenuItems.map((item) => (
                                         <Link
                                             key={item.path}
                                             to={item.path}
@@ -174,7 +179,7 @@ const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
                                     ))}
                                     <div className="pt-3 mt-3 border-t border-slate-200 dark:border-slate-800">
                                         <p className="px-4 py-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">Admin</p>
-                                        {adminItems.map((item) => (
+                                        {filteredAdminItems.map((item) => (
                                             <Link
                                                 key={item.path}
                                                 to={item.path}
@@ -190,8 +195,15 @@ const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
                                         ))}
                                     </div>
                                 </nav>
-                                {/* Mobile logout button */}
-                                <div className="absolute bottom-4 left-4 right-4">
+                                {/* Mobile bottom buttons */}
+                                <div className="absolute bottom-4 left-4 right-4 space-y-2">
+                                    <button
+                                        onClick={() => window.location.reload()}
+                                        className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors group"
+                                    >
+                                        <RefreshCw size={20} className="group-hover:rotate-180 transition-transform duration-500" />
+                                        <span className="font-medium">Refresh</span>
+                                    </button>
                                     <button
                                         onClick={handleLogoutClick}
                                         className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
@@ -238,7 +250,7 @@ const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
                 </div>
 
                 <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto">
-                    {menuItems.map((item) => (
+                    {filteredMenuItems.map((item) => (
                         <Link
                             key={item.path}
                             to={item.path}
@@ -282,7 +294,7 @@ const Sidebar = ({ isMobile, isOpen, setIsOpen }) => {
                                 </motion.p>
                             )}
                         </AnimatePresence>
-                        {adminItems.map((item) => (
+                        {filteredAdminItems.map((item) => (
                             <Link
                                 key={item.path}
                                 to={item.path}

@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const AuthScreen = () => {
-  const [mode, setMode] = useState("login"); // "login" | "request" | "status"
+  const [mode, setMode] = useState("login"); // "login" | "request" | "status" | "forgot"
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [noAccountError, setNoAccountError] = useState(false);
@@ -28,6 +28,8 @@ const AuthScreen = () => {
   const [statusEmail, setStatusEmail] = useState("");
   const [statusRequestId, setStatusRequestId] = useState("");
   const [statusResult, setStatusResult] = useState(null);
+  // Forgot password state
+  const [forgotEmail, setForgotEmail] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -98,7 +100,23 @@ const AuthScreen = () => {
     setNoAccountError(false);
     setSuccess("");
     setSubmittedRequestId("");
-    setStatusResult(null);
+    if (newMode !== "status") setStatusResult(null);
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setIsLoading(true);
+    try {
+      const res = await api.post("/auth/forgot-password", { email: forgotEmail });
+      setSuccess(res.data.message);
+      setForgotEmail("");
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to process request.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const StatusDisplay = ({ result }) => {
@@ -188,23 +206,27 @@ const AuthScreen = () => {
             </motion.div>
             <h1 className="text-2xl font-bold text-white mb-1">FairFare Admin</h1>
             <p className="text-slate-400 text-sm">
-              {mode === "login" ? "Welcome back, Administrator" : mode === "request" ? "Request Admin Privileges" : "Check Your Request Status"}
+              {mode === "login" ? "Welcome back, Administrator" :
+               mode === "request" ? "Request Admin Privileges" :
+               mode === "status" ? "Check Your Request Status" :
+               "Reset Your Password"}
             </p>
           </div>
 
           {/* Mode Toggle */}
-          <div className="flex rounded-xl p-1 mb-6"
+          <div className="flex rounded-xl p-1 mb-6 overflow-x-auto no-scrollbar"
             style={{ background: "rgba(255, 255, 255, 0.05)" }}
           >
             {[
               { key: "login", label: "Login" },
               { key: "request", label: "Request" },
               { key: "status", label: "Status" },
+              { key: "forgot", label: "Forgot" },
             ].map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => switchMode(tab.key)}
-                className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${mode === tab.key
+                className={`flex-1 min-w-[70px] py-2.5 text-xs font-medium rounded-lg transition-all duration-300 ${mode === tab.key
                     ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25"
                     : "text-slate-400 hover:text-slate-300"
                   }`}
@@ -258,7 +280,7 @@ const AuthScreen = () => {
                     <p className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold mb-1">Your Tracking ID</p>
                     <div className="flex items-center justify-between">
                       <span className="text-lg font-mono font-bold text-white leading-none">{submittedRequestId}</span>
-                      <button 
+                      <button
                         onClick={() => {
                           navigator.clipboard.writeText(submittedRequestId);
                           // Optional: show a small toast or change icon
@@ -278,7 +300,7 @@ const AuthScreen = () => {
 
           {/* Forms */}
           <AnimatePresence mode="wait">
-            {mode === "login" ? (
+            {mode === "login" && (
               <motion.form
                 key="login"
                 initial={{ opacity: 0, x: -20 }}
@@ -316,6 +338,15 @@ const AuthScreen = () => {
                     />
                   </div>
                 </div>
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => switchMode("forgot")}
+                    className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
                 <motion.button
                   type="submit"
                   disabled={isLoading}
@@ -337,7 +368,9 @@ const AuthScreen = () => {
                   )}
                 </motion.button>
               </motion.form>
-            ) : mode === "request" ? (
+            )}
+
+            {mode === "request" && (
               <motion.form
                 key="request"
                 initial={{ opacity: 0, x: 20 }}
@@ -410,7 +443,9 @@ const AuthScreen = () => {
                   )}
                 </motion.button>
               </motion.form>
-            ) : (
+            )}
+
+            {mode === "status" && (
               <motion.form
                 key="status"
                 initial={{ opacity: 0, x: 20 }}
@@ -470,6 +505,65 @@ const AuthScreen = () => {
                 </motion.button>
 
                 {statusResult && <StatusDisplay result={statusResult} />}
+              </motion.form>
+            )}
+
+            {mode === "forgot" && (
+              <motion.form
+                key="forgot"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                onSubmit={handleForgotPassword}
+                className="space-y-4"
+              >
+                <div>
+                  <p className="text-slate-400 text-sm mb-4 leading-relaxed">
+                    Enter your registered email address and we'll send you a temporary password to regain access.
+                  </p>
+                  <label className="block text-sm font-medium text-slate-300 mb-1.5">Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <input
+                      type="email"
+                      required
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-sm"
+                      placeholder="admin@fairfare.app"
+                    />
+                  </div>
+                </div>
+                <motion.button
+                  type="submit"
+                  disabled={isLoading}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-white transition-all disabled:opacity-60 text-sm"
+                  style={{
+                    background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                    boxShadow: "0 4px 20px rgba(245, 158, 11, 0.3)",
+                  }}
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>
+                      Send Temporary Password
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </motion.button>
+                <div className="text-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => switchMode("login")}
+                    className="text-xs text-slate-400 hover:text-white transition-colors underline underline-offset-4 decoration-slate-700 decoration-1"
+                  >
+                    Back to Login
+                  </button>
+                </div>
               </motion.form>
             )}
           </AnimatePresence>

@@ -79,16 +79,38 @@ export const updateTicket = async (req, res) => {
         const { id } = req.params;
         const updates = req.body;
 
+        const ticketBeforeUpdate = await Ticket.findById(id);
+        if (!ticketBeforeUpdate) {
+            return res.status(404).json({ message: "Ticket not found" });
+        }
+
+        // Ownership Enforcement for regular admins
+        if (req.admin.role !== "superadmin") {
+            // Find the linked FairFare User account for this admin
+            const linkedUser = await User.findOne({ email: req.admin.email });
+            if (!linkedUser) {
+                return res.status(403).json({ message: "No linked FairFare user account found for your admin email." });
+            }
+
+            const isAssignedToThem = ticketBeforeUpdate.assignedTo && ticketBeforeUpdate.assignedTo.toString() === linkedUser._id.toString();
+
+            // Case 1: Not assigned to them, and they are NOT assigning it to themselves now
+            if (!isAssignedToThem && updates.assignedTo !== linkedUser._id.toString()) {
+                return res.status(403).json({ message: "Access denied. You can only edit tickets assigned to you." });
+            }
+
+            // Case 2: They are trying to reassign it to someone else (regular admins can only assign to self)
+            if (updates.assignedTo && updates.assignedTo.toString() !== linkedUser._id.toString()) {
+                return res.status(403).json({ message: "You can only assign tickets to yourself." });
+            }
+        }
+
         let ticket;
         await session.withTransaction(async () => {
             ticket = await Ticket.findByIdAndUpdate(id, updates, { new: true, session })
                 .populate("raisedBy", "username email")
                 .populate("assignedTo", "username email");
         });
-
-        if (!ticket) {
-            return res.status(404).json({ message: "Ticket not found" });
-        }
 
         res.status(200).json({ message: "Ticket updated", ticket });
     } catch (error) {
@@ -105,14 +127,24 @@ export const deleteTicket = async (req, res) => {
     try {
         const { id } = req.params;
 
-        let ticket;
-        await session.withTransaction(async () => {
-            ticket = await Ticket.findByIdAndDelete(id, { session });
-        });
-
+        const ticket = await Ticket.findById(id);
         if (!ticket) {
             return res.status(404).json({ message: "Ticket not found" });
         }
+
+        // Ownership Enforcement for regular admins
+        if (req.admin.role !== "superadmin") {
+            const linkedUser = await User.findOne({ email: req.admin.email });
+            const isAssignedToThem = linkedUser && ticket.assignedTo && ticket.assignedTo.toString() === linkedUser._id.toString();
+
+            if (!isAssignedToThem) {
+                return res.status(403).json({ message: "Access denied. You can only delete tickets assigned to you." });
+            }
+        }
+
+        await session.withTransaction(async () => {
+            await Ticket.findByIdAndDelete(id, { session });
+        });
 
         res.status(200).json({ message: "Ticket deleted successfully" });
     } catch (error) {

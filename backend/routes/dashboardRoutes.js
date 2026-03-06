@@ -12,6 +12,7 @@ import { getAllUsers, updateUserPassword } from "../controllers/user.js";
 import { getNotificationStats, getNotificationUsers, sendNotification } from "../controllers/notification.js";
 import { sendEmailCampaign } from "../controllers/emailCampaignController.js";
 import { generateAndSendDailyReport } from "../services/dailyEmailReport.js";
+import { requirePermission } from "../middleware/permissionMiddleware.js";
 
 const router = express.Router();
 
@@ -23,27 +24,27 @@ router.get("/ai-stats", getAiUsageStats);
 router.get("/active-users-stats", getActiveUsersStats);
 
 // Ticket Routes
-router.post("/tickets", createTicket);
+router.post("/tickets", requirePermission("manage_tickets"), createTicket);
 router.get("/tickets", getAllTickets);
 router.get("/tickets/users", getUsersForAssignment);
-router.patch("/tickets/:id", updateTicket);
-router.delete("/tickets/:id", deleteTicket);
+router.patch("/tickets/:id", requirePermission("manage_tickets"), updateTicket);
+router.delete("/tickets/:id", requirePermission("manage_tickets"), deleteTicket);
 router.get("/ticket-stats", getTicketStats);
 
 // User Routes
 router.get("/users", getAllUsers);
-router.patch("/users/:id/password", updateUserPassword);
+router.patch("/users/:id/password", requirePermission("manage_users"), updateUserPassword);
 
 // Notification Routes
 router.get("/notification-stats", getNotificationStats);
 router.get("/notification-users", getNotificationUsers);
-router.post("/send-notification", sendNotification);
+router.post("/send-notification", requirePermission("send_campaigns"), sendNotification);
 
 // Email Campaign Routes
-router.post("/send-email-campaign", sendEmailCampaign);
+router.post("/send-email-campaign", requirePermission("send_campaigns"), sendEmailCampaign);
 
 // Daily Report - Manual Trigger (for testing)
-router.post("/trigger-daily-report", async (req, res) => {
+router.post("/trigger-daily-report", requirePermission("send_campaigns"), async (req, res) => {
     try {
         await generateAndSendDailyReport();
         res.json({ message: "Daily report sent successfully" });

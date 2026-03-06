@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { X, Save, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 const TicketModal = ({ isOpen, onClose, onTicketCreated, initialTicket = null }) => {
+    const { admin } = useAuth();
+    const isReadOnly = initialTicket && admin.role !== "superadmin" && initialTicket.assignedTo?.email !== admin.email;
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -107,7 +110,8 @@ const TicketModal = ({ isOpen, onClose, onTicketCreated, initialTicket = null })
                             required
                             value={formData.title}
                             onChange={handleChange}
-                            className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500/50 transition-colors placeholder:text-slate-600"
+                            disabled={isReadOnly}
+                            className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500/50 transition-colors placeholder:text-slate-600 disabled:opacity-60"
                             placeholder="Brief summary of the issue"
                         />
                     </div>
@@ -119,7 +123,8 @@ const TicketModal = ({ isOpen, onClose, onTicketCreated, initialTicket = null })
                                 name="severity"
                                 value={formData.severity}
                                 onChange={handleChange}
-                                className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500/50 transition-colors"
+                                disabled={isReadOnly}
+                                className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500/50 transition-colors disabled:opacity-60"
                             >
                                 <option value="Low">Low</option>
                                 <option value="Medium">Medium</option>
@@ -133,7 +138,8 @@ const TicketModal = ({ isOpen, onClose, onTicketCreated, initialTicket = null })
                                 name="status"
                                 value={formData.status}
                                 onChange={handleChange}
-                                className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500/50 transition-colors"
+                                disabled={isReadOnly}
+                                className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500/50 transition-colors disabled:opacity-60"
                             >
                                 <option value="Open">Open</option>
                                 <option value="Assigned">Assigned</option>
@@ -149,7 +155,8 @@ const TicketModal = ({ isOpen, onClose, onTicketCreated, initialTicket = null })
                             name="assignedTo"
                             value={formData.assignedTo}
                             onChange={handleChange}
-                            className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500/50 transition-colors"
+                            disabled={isReadOnly}
+                            className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500/50 transition-colors disabled:opacity-60"
                         >
                             <option value="">Unassigned</option>
                             {users.map(user => (
@@ -168,7 +175,8 @@ const TicketModal = ({ isOpen, onClose, onTicketCreated, initialTicket = null })
                             rows={4}
                             value={formData.description}
                             onChange={handleChange}
-                            className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500/50 transition-colors placeholder:text-slate-600 resize-none"
+                            disabled={isReadOnly}
+                            className="w-full bg-slate-800 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500/50 transition-colors placeholder:text-slate-600 resize-none disabled:opacity-60"
                             placeholder="Detailed explanation of the problem..."
                         />
                     </div>
@@ -183,8 +191,9 @@ const TicketModal = ({ isOpen, onClose, onTicketCreated, initialTicket = null })
                         </button>
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={loading || (initialTicket && admin.role !== "superadmin" && initialTicket.assignedTo?.email !== admin.email)}
                             className="flex items-center gap-2 px-6 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-lg shadow-indigo-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={initialTicket && admin.role !== "superadmin" && initialTicket.assignedTo?.email !== admin.email ? "Read-only access" : ""}
                         >
                             {loading ? "Saving..." : (
                                 <>

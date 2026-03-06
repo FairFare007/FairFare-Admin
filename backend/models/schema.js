@@ -166,6 +166,7 @@ const adminUserSchema = new mongoose.Schema(
         role: { type: String, enum: ["superadmin", "admin"], default: "admin" },
         status: { type: String, enum: ["active", "suspended"], default: "active" },
         mustChangePassword: { type: Boolean, default: false },
+        permissions: [{ type: String }], // Array of permission keys
     },
     { timestamps: true }
 );
@@ -214,6 +215,18 @@ const adminActivityLogSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+// Permission Request schema
+const permissionRequestSchema = new mongoose.Schema(
+    {
+        admin: { type: mongoose.Schema.Types.ObjectId, ref: "AdminUser", required: true },
+        permission: { type: String, required: true },
+        reason: { type: String, required: true },
+        status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+        reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "AdminUser", default: null },
+    },
+    { timestamps: true }
+);
+
 adminActivityLogSchema.index({ createdAt: -1 });
 adminActivityLogSchema.index({ admin: 1, createdAt: -1 });
 
@@ -227,5 +240,6 @@ const ReportLog = mongoose.model("ReportLog", reportLogSchema);
 const AdminUser = mongoose.model("AdminUser", adminUserSchema);
 const AccessRequest = mongoose.model("AccessRequest", accessRequestSchema);
 const AdminActivityLog = mongoose.model("AdminActivityLog", adminActivityLogSchema);
+const PermissionRequest = mongoose.model("PermissionRequest", permissionRequestSchema);
 
-export { User, Group, Expense, FriendRequest, LabelCategory, Ticket, ReportLog, AdminUser, AccessRequest, AdminActivityLog };
+export { User, Group, Expense, FriendRequest, LabelCategory, Ticket, ReportLog, AdminUser, AccessRequest, AdminActivityLog, PermissionRequest };

@@ -4,6 +4,7 @@ import api from "../services/api";
 import { Plus, Search, Filter, AlertCircle, CheckCircle, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import TicketModal from "../components/Tickets/TicketModal";
+import { useAuth } from "../context/AuthContext";
 
 const Tickets = () => {
     const [tickets, setTickets] = useState([]);
@@ -15,6 +16,7 @@ const Tickets = () => {
     const [selectedTicket, setSelectedTicket] = useState(null);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const { admin, hasPermission } = useAuth();
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -123,13 +125,15 @@ const Tickets = () => {
                     <h2 className="text-2xl font-bold text-white tracking-tight">Ticket Management</h2>
                     <p className="text-slate-400">Track and resolve user issues and support requests.</p>
                 </div>
-                <button
-                    onClick={handleCreateNew}
-                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg shadow-indigo-500/20 font-medium"
-                >
-                    <Plus size={18} />
-                    New Ticket
-                </button>
+                {hasPermission("manage_tickets") && (
+                    <button
+                        onClick={handleCreateNew}
+                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg shadow-indigo-500/20 font-medium"
+                    >
+                        <Plus size={18} />
+                        New Ticket
+                    </button>
+                )}
             </div>
 
             {/* Stats Row */}
@@ -222,18 +226,30 @@ const Tickets = () => {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleEdit(ticket); }}
-                                            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm border border-white/5 transition-colors"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            onClick={(e) => handleDelete(e, ticket._id)}
-                                            className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm border border-red-500/20 transition-colors"
-                                        >
-                                            Delete
-                                        </button>
+                                        {(admin.role === "superadmin" || ticket.assignedTo?.email === admin.email) ? (
+                                            <>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleEdit(ticket); }}
+                                                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm border border-white/5 transition-colors"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    onClick={(e) => handleDelete(e, ticket._id)}
+                                                    className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm border border-red-500/20 transition-colors"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleEdit(ticket); }}
+                                                className="px-3 py-1.5 rounded-lg bg-slate-800/50 hover:bg-slate-700 text-slate-400 text-sm border border-white/5 transition-colors cursor-help"
+                                                title="View Only"
+                                            >
+                                                View
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </motion.div>
