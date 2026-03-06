@@ -17,6 +17,11 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+//Ping Route
+app.get("/api/ping", (req, res) => {
+  res.send("ponging");
+});
+
 // Auth routes (login, access requests - partially public)
 app.use("/api/auth", authRoutes);
 
@@ -30,7 +35,7 @@ app.get("/", (req, res) => {
 // ✅ Self-ping function to prevent Render sleeping
 function keepServerAwake() {
   setInterval(() => {
-    fetch("https://fairfare-0hyl.onrender.com/api/ping")
+    fetch("https://fairfare-admin.onrender.com/api/ping")
       .then((res) => res.text())
       .then((data) => console.log("Self-ping successfully:", data))
       .catch((err) => console.log("Self-ping failed:", err.message));
