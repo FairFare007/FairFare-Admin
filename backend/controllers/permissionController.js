@@ -1,4 +1,4 @@
-import { AdminUser, PermissionRequest, AdminActivityLog } from "../models/schema.js";
+import { AdminUser, PermissionRequest, AdminActivityLog, User } from "../models/schema.js";
 import { logActivity } from "../utils/activityLogger.js";
 
 /**
@@ -24,7 +24,18 @@ export const getMyPermissions = async (req, res) => {
 export const getAllAdmins = async (req, res) => {
     try {
         const admins = await AdminUser.find({}, "name email role status permissions").sort({ name: 1 });
-        res.json(admins);
+
+        // Sync names in real-time before returning
+        const syncedAdmins = await Promise.all(admins.map(async (admin) => {
+            const fairfareUser = await User.findOne({ email: admin.email });
+            if (fairfareUser && fairfareUser.username !== admin.name) {
+                admin.name = fairfareUser.username;
+                await admin.save();
+            }
+            return admin;
+        }));
+
+        res.json(syncedAdmins);
     } catch (error) {
         console.error("[PERMISSIONS] Fetch admins error:", error.message);
         res.status(500).json({ error: "Failed to fetch admins." });

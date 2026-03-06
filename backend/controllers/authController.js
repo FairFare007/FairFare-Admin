@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import crypto from "crypto";
-import { AdminUser } from "../models/schema.js";
+import { AdminUser, User } from "../models/schema.js";
 import { generateToken } from "../utils/jwt.js";
 import { logActivity } from "../utils/activityLogger.js";
 import { buildForgotPasswordEmail } from "../utils/forgotPasswordEmail.js";
@@ -29,6 +29,13 @@ export const login = async (req, res) => {
         const isMatch = await admin.comparePassword(password);
         if (!isMatch) {
             return res.status(401).json({ error: "Invalid email or password." });
+        }
+
+        // Sync name with FairFare app User
+        const fairfareUser = await User.findOne({ email: admin.email });
+        if (fairfareUser && fairfareUser.username !== admin.name) {
+            admin.name = fairfareUser.username;
+            await admin.save();
         }
 
         const token = generateToken(admin);

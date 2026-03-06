@@ -46,7 +46,7 @@ export const submitAccessRequest = async (req, res) => {
                     {
                         requestId,
                         email: normalizedEmail,
-                        name: name.trim(),
+                        name: fairfareUser.username, // Use username from FairFare app
                         reason,
                     },
                 ],
