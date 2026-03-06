@@ -270,29 +270,29 @@ const PermissionsManagement = () => {
                                                 hasChanges ? "border-blue-500/40 shadow-xl shadow-blue-500/5 ring-1 ring-blue-500/20" : "border-white/5 hover:border-white/10"
                                             }`}
                                         >
-                                            <div className="p-5 flex items-center justify-between gap-4">
-                                                <div className="flex items-center gap-4">
-                                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${admin.role === "superadmin" ? "bg-indigo-500/20 text-indigo-400" : "bg-blue-500/10 text-blue-400"}`}>
+                                            <div className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
+                                                    <div className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${admin.role === "superadmin" ? "bg-indigo-500/20 text-indigo-400" : "bg-blue-500/10 text-blue-400"}`}>
                                                         {admin.role === "superadmin" ? <Shield size={24} /> : <UserCheck size={24} />}
                                                     </div>
-                                                    <div>
-                                                        <h3 className="text-white font-bold flex items-center gap-2">
-                                                            {admin.name}
+                                                    <div className="min-w-0 flex-1">
+                                                        <h3 className="text-white font-bold flex flex-wrap items-center gap-2">
+                                                            <span className="truncate">{admin.name}</span>
                                                             {admin.role === "superadmin" && (
-                                                                <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full uppercase tracking-tighter">Superadmin</span>
+                                                                <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full uppercase tracking-tighter whitespace-nowrap">Superadmin</span>
                                                             )}
                                                             {admin._id === currentAdmin._id && (
-                                                                <span className="text-[10px] bg-white/10 text-slate-400 px-2 py-0.5 rounded-full uppercase tracking-tighter">You</span>
+                                                                <span className="text-[10px] bg-white/10 text-slate-400 px-2 py-0.5 rounded-full uppercase tracking-tighter whitespace-nowrap">You</span>
                                                             )}
                                                             {hasChanges && (
-                                                                <span className="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full uppercase tracking-tighter animate-pulse">Pending Changes</span>
+                                                                <span className="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full uppercase tracking-tighter animate-pulse whitespace-nowrap">Pending Changes</span>
                                                             )}
                                                         </h3>
-                                                        <p className="text-slate-500 text-sm">{admin.email}</p>
+                                                        <p className="text-slate-500 text-sm truncate">{admin.email}</p>
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex items-center gap-2 self-end md:self-auto">
                                                     {/* Promotion/Demotion only for Superadmins */}
                                                     {currentAdmin.role === "superadmin" && admin._id !== currentAdmin._id && (
                                                         admin.role === "admin" ? (
