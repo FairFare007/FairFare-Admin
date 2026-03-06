@@ -29,23 +29,31 @@ app.use("/api/auth", authRoutes);
 app.use("/api", verifyAdmin, metricRoutes);
 
 app.get("/", (req, res) => {
-    res.send("API is running...");
+  res.send("API is running...");
 });
 
 // ✅ Self-ping function to prevent Render sleeping
 function keepServerAwake() {
-  setInterval(() => {
-    fetch("https://fairfare-admin.onrender.com/api/ping")
-      .then((res) => res.text())
-      .then((data) => console.log("Self-ping successfully:", data))
-      .catch((err) => console.log("Self-ping failed:", err.message));
-  }, 5 * 60 * 1000); // every 5 minutes
+  // Ping every 5 minutes
+  setInterval(async () => {
+    try {
+      const url = process.env.RENDER_EXTERNAL_URL
+        ? `${process.env.RENDER_EXTERNAL_URL}/api/ping`
+        : `http://localhost:${PORT}/api/ping`;
+
+      const response = await fetch(url);
+      const data = await response.text();
+      console.log(`[SELF-PING] Success: ${data} at ${new Date().toLocaleTimeString()}`);
+    } catch (err) {
+      console.error(`[SELF-PING] Failed: ${err.message}`);
+    }
+  }, 5 * 60 * 1000);
 }
 
 keepServerAwake();
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    startCronJobs();
+  console.log(`Server running on port ${PORT}`);
+  startCronJobs();
 });
 
