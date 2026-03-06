@@ -12,6 +12,7 @@ import {
     demoteFromSuperadmin,
     submitRequest,
     getRequests,
+    getMyRequests,
     approveRequest,
     rejectRequest
 } from "../controllers/permissionController.js";
@@ -40,6 +41,7 @@ router.patch("/permissions/admins/:adminId/promote", verifyAdmin, promoteToSuper
 router.patch("/permissions/admins/:adminId/demote", verifyAdmin, demoteFromSuperadmin);   // Controller handles superadmin check
 
 router.post("/permissions/requests", verifyAdmin, submitRequest);
+router.get("/permissions/requests/my", verifyAdmin, getMyRequests);
 router.get("/permissions/requests", verifyAdmin, requirePermission("manage_permissions"), getRequests);
 router.patch("/permissions/requests/:id/approve", verifyAdmin, requirePermission("manage_permissions"), approveRequest);
 router.patch("/permissions/requests/:id/reject", verifyAdmin, requirePermission("manage_permissions"), rejectRequest);

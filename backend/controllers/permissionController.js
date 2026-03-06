@@ -174,6 +174,22 @@ export const submitRequest = async (req, res) => {
 };
 
 /**
+ * GET /permissions/requests/my
+ * Get current admin's permission requests.
+ */
+export const getMyRequests = async (req, res) => {
+    try {
+        const requests = await PermissionRequest.find({ admin: req.admin._id })
+            .populate("reviewedBy", "name")
+            .sort({ createdAt: -1 });
+        res.json(requests);
+    } catch (error) {
+        console.error("[PERMISSIONS] Fetch my requests error:", error.message);
+        res.status(500).json({ error: "Failed to fetch your requests." });
+    }
+};
+
+/**
  * GET /permissions/requests (Superadmin / manage_permissions)
  */
 export const getRequests = async (req, res) => {

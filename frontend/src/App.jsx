@@ -16,6 +16,7 @@ import ChangePassword from "./pages/ChangePassword";
 import NoAccess from "./pages/NoAccess";
 import PermissionsManagement from "./pages/PermissionsManagement";
 import RequestPermissions from "./pages/RequestPermissions";
+import MyRequests from "./pages/MyRequests";
 import "./index.css"; // Ensure global styles are applied
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
               <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
               <Route path="/permissions" element={<ProtectedRoute requiredPermission="manage_permissions"><PermissionsManagement /></ProtectedRoute>} />
               <Route path="/request-permissions" element={<ProtectedRoute><RequestPermissions /></ProtectedRoute>} />
+              <Route path="/my-requests" element={<ProtectedRoute><MyRequests /></ProtectedRoute>} />
               <Route path="/no-access" element={<ProtectedRoute><NoAccess /></ProtectedRoute>} />
 
               {/* Catch-all */}
