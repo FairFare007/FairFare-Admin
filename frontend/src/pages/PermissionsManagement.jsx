@@ -293,23 +293,6 @@ const PermissionsManagement = () => {
                                                 </div>
 
                                                 <div className="flex items-center gap-2">
-                                                    {hasChanges && (
-                                                        <div className="flex items-center gap-2 mr-2">
-                                                            <button 
-                                                                onClick={() => handleResetPending(admin._id)}
-                                                                className="px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:text-white transition-all"
-                                                            >
-                                                                Reset
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => handleConfirmUpdate(admin._id)}
-                                                                className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-bold uppercase tracking-wider transition-all shadow-lg shadow-blue-500/20"
-                                                            >
-                                                                Save Changes
-                                                            </button>
-                                                        </div>
-                                                    )}
-
                                                     {/* Promotion/Demotion only for Superadmins */}
                                                     {currentAdmin.role === "superadmin" && admin._id !== currentAdmin._id && (
                                                         admin.role === "admin" ? (
@@ -359,21 +342,21 @@ const PermissionsManagement = () => {
                                                             ) : (
                                                                 <>
                                                                     <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-4">Granular Permissions</p>
-                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
                                                                         {ALL_PERMISSIONS.map((perm) => (
                                                                             <button
                                                                                 key={perm.key}
                                                                                 onClick={() => handleTogglePermission(admin._id, perm.key, admin.permissions || [])}
-                                                                                className={`flex items-start gap-3 p-3 rounded-2xl border transition-all text-left ${
+                                                                                className={`flex items-start gap-3 p-3 rounded-2xl border transition-all text-left group ${
                                                                                     effectivePermissions.includes(perm.key)
                                                                                         ? "bg-blue-600/10 border-blue-500/30 ring-1 ring-blue-500/20"
                                                                                         : "bg-slate-800/30 border-white/5 hover:border-white/10"
                                                                                 }`}
                                                                             >
-                                                                                <div className={`mt-0.5 w-5 h-5 rounded-md flex items-center justify-center border ${
+                                                                                <div className={`mt-0.5 w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
                                                                                     effectivePermissions.includes(perm.key)
-                                                                                        ? "bg-blue-600 border-blue-600 text-white"
-                                                                                        : "bg-slate-800 border-white/10"
+                                                                                        ? "bg-blue-600 border-blue-600 text-white scale-110 shadow-lg shadow-blue-500/20"
+                                                                                        : "bg-slate-800 border-white/10 group-hover:border-white/20"
                                                                                 }`}>
                                                                                     {effectivePermissions.includes(perm.key) && <CheckCircle2 size={12} />}
                                                                                 </div>
@@ -386,6 +369,38 @@ const PermissionsManagement = () => {
                                                                             </button>
                                                                         ))}
                                                                     </div>
+
+                                                                    {/* Action Buttons for Pending Changes */}
+                                                                    <AnimatePresence>
+                                                                        {hasChanges && (
+                                                                            <motion.div 
+                                                                                initial={{ opacity: 0, y: 10 }}
+                                                                                animate={{ opacity: 1, y: 0 }}
+                                                                                exit={{ opacity: 0, y: 10 }}
+                                                                                className="flex flex-col md:flex-row items-center gap-3 pt-6 border-t border-white/5"
+                                                                            >
+                                                                                <div className="flex items-center gap-2 text-blue-400 mr-auto mb-2 md:mb-0">
+                                                                                    <Clock size={16} className="animate-pulse" />
+                                                                                    <span className="text-xs font-bold uppercase tracking-wider">Unsaved Changes</span>
+                                                                                </div>
+                                                                                <div className="flex items-center gap-3 w-full md:w-auto">
+                                                                                    <button 
+                                                                                        onClick={() => handleResetPending(admin._id)}
+                                                                                        className="flex-1 md:flex-none px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold transition-all border border-white/5"
+                                                                                    >
+                                                                                        Reset
+                                                                                    </button>
+                                                                                    <button 
+                                                                                        onClick={() => handleConfirmUpdate(admin._id)}
+                                                                                        className="flex-1 md:flex-none px-8 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-all shadow-xl shadow-blue-500/20 flex items-center justify-center gap-2 group"
+                                                                                    >
+                                                                                        <ShieldCheck size={18} className="group-hover:scale-110 transition-transform" />
+                                                                                        Save Changes
+                                                                                    </button>
+                                                                                </div>
+                                                                            </motion.div>
+                                                                        )}
+                                                                    </AnimatePresence>
                                                                 </>
                                                             )}
                                                         </div>
